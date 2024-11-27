@@ -1,0 +1,23 @@
+.tableContainer__row {
+    display: grid;
+    gap: 50px;
+    grid-template-columns: 1fr 1fr;
+
+}
+
+
+.tableContainer__row__inner {
+    padding: 10px;
+    border: 1px solid black;
+    height: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.isFirst {
+    justify-content: center;
+    font-weight: 600;
+    font-size: larger;
+}

@@ -1,0 +1,22 @@
+@import './consts/_vars.scss';
+
+.mainContainer {
+    min-height: 100vh;
+    padding: 200px;
+
+    position: relative;
+}
+
+
+.controlPanel {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    align-items: center;
+}
+
+.errorMsg {
+    padding-top: 30px;
+    color: red;
+    font-size: large;
+}
