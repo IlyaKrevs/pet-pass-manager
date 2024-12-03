@@ -1,33 +1,31 @@
 import { useState } from "react";
 
-type ChangeEvent = (e: React.ChangeEvent<HTMLInputElement>) => void
+type onChangeText = (value: string) => void
+type TextTuple = [string, onChangeText, boolean | null]
 
-type TextTuple = [string, ChangeEvent, boolean | null, (value: string) => void]
+type validFn = () => boolean
 
-export function useTextInput(initValue: string): TextTuple {
+export function useTextInput(initValue: string, isValidFn: validFn): TextTuple {
     const [value, setValue] = useState(initValue)
     const [valid, setIsValid] = useState<boolean | null>(null)
 
-    function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setIsValid(+e.target.value.length > 0)
-        setValue(e.target.value)
-    }
-
-    function setHandler(value: string) {
+    function onChange(value: string) {
+        setIsValid(isValidFn())
         setValue(value)
-        setIsValid(+value.length > 0)
     }
 
-    return [value, onChange, valid, setHandler]
+    return [value, onChange, valid]
 }
 
-type CheckBoxTuple = [boolean, ChangeEvent]
 
-export function useCheckBoxInput(init?: boolean): CheckBoxTuple {
-    const [value, setValue] = useState(init || false)
+type onChangeCheckBox = (value: boolean) => void
+type CheckBoxTuple = [boolean, onChangeCheckBox]
 
-    function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setValue(e.target.checked)
+export function useCheckBoxInput(): CheckBoxTuple {
+    const [value, setValue] = useState(false)
+
+    function onChange(value: boolean) {
+        setValue(value)
     }
 
     return [value, onChange]

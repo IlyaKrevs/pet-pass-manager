@@ -1,8 +1,11 @@
 {
   "name": "pet-pass-manager",
+  "homepage": "https://IlyaKrevs.github.io/pet-pass-manager",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@fluentui/react-components": "^9.56.3",
+    "@fluentui/react-icons": "^2.0.266",
     "@reduxjs/toolkit": "^2.3.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -22,7 +25,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -43,6 +48,7 @@
     ]
   },
   "devDependencies": {
+    "gh-pages": "^6.2.0",
     "sass": "^1.81.0"
   }
 }

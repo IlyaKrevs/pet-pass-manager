@@ -32,6 +32,10 @@ function generateRandomPass(
         }
     }
 
+    if (usedSymbols.length === 0) {
+        return ''
+    }
+
     let result = ''
 
     for (let i = 0; i < length; i++) {

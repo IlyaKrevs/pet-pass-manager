@@ -5,6 +5,7 @@ import App from './App';
 
 import { reduxStore } from './redux/redux';
 import { Provider } from 'react-redux';
+import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,9 +13,14 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
 
-    <Provider store={reduxStore}>
-      <App />
-    </Provider>
+    <FluentProvider theme={webDarkTheme}>
+      <Provider store={reduxStore}>
+        <App />
+      </Provider>
+    </FluentProvider>
+
   </React.StrictMode>
 );
+
+
 

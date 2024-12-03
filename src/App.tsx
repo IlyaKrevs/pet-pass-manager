@@ -1,96 +1,188 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import classes from './App.module.scss'
-import { CustomBtn } from './Components/CustomBtn/CustomBtn';
-import { TwoColumnTable } from './Containers/TwoColumnTable/TwoColumnTable';
 import { useAppDispatch, useAppSelector } from './redux/reduxHooks';
-import { TableRow } from './Components/TableRow/TableRow';
-import { passManagerActions } from './redux/slices/passManagerSlice';
+import { passManagerActionsAsync } from './redux/slices/passManagerSlice';
 import { saveToClipBoard } from './MyFn/saveToClipboard';
-import { ModalWindowWithContent } from './Containers/ModalWindowWithContent/ModalWindowWithContent';
-import { modalActions } from './redux/slices/modalSlice';
-import { Spinner } from './Components/Spinner/Spinner';
-import { CustomInput } from './Components/CustomInput/CustomInput';
-import { useTextInput } from './MyFn/customHooks';
+import { InlineInput } from './Components/InlineInput/InlineInput';
+import { CellButtonType, ColumnsType, RowType, SimpleTable } from './Containers/SimpleTable/SimpleTable';
+import { AddRegular, Copy24Regular, Delete24Filled } from '@fluentui/react-icons';
+import { makeStyles, Button, InputProps, Dialog, DialogTrigger, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, Spinner, Toaster, useId, useToastController, Toast, ToastTitle } from '@fluentui/react-components';
+
+import { AddNewModal } from './Containers/AddNewModal/AddNewModal';
+import { DeleteModal } from './Containers/DeleteModal/DeleteModal';
+
+type ModalsType = null | 'Add' | 'Delete'
+
+const useStyles = makeStyles({
+  root: {
+    position: 'relative',
+    padding: '200px',
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '50px'
+  },
+  controlPanel: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '50px',
+  },
+  tableContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  spinnerContainer: {
+    position: 'absolute',
+    zIndex: 1e10,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backdropFilter: 'blur(5px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+})
 
 function App() {
 
-  const items = useAppSelector(state => state.passManager.loginItems)
-  const modalStatus = useAppSelector(state => state.modalWindow.windowType)
-  const isLoading = useAppSelector(state => state.passManager.isLoading)
-  const isError = useAppSelector(state => state.passManager.error)
-  const dispatch = useAppDispatch()
+  const isLoading = useAppSelector(s => s.passManager.isLoading)
 
+  const styles = useStyles()
 
-  function deleteCallback(value: number) {
-    dispatch(passManagerActions.deleteLoginPassAsync({ id: value }))
+  const serviceItems = useAppSelector(state => state.passManager.loginItems)
+
+  const columns: ColumnsType[] = useMemo(() => [
+    { columnKey: 'login', label: 'Login' },
+    { columnKey: 'password', label: 'Password' },
+  ], [])
+
+  const rows: RowType[] = useMemo(() => {
+    return serviceItems.map(item => {
+      return {
+        id: item.id + '',
+        cells: [{ label: item.login }, { label: item.password }]
+      }
+    })
+  }, [serviceItems])
+
+  const buttons: CellButtonType[] = useMemo(() => {
+    return [
+      {
+        label: <Copy24Regular />,
+        callback: (row, index) => {
+          let toCopy = row.cells[index].label
+          alert(`Copied => ${toCopy}`)
+          saveToClipBoard(toCopy)
+        }
+      },
+      {
+        label: <Delete24Filled />,
+        callback: (row, index) => {
+          setDeleteID(+row.id)
+          openModalHadnler('Delete')
+        }
+      },
+    ]
+  }, [])
+
+  const [deleteID, setDeleteID] = useState<number | null>(null)
+
+  const [textInput, setTextInput] = useState('')
+  const [search, setSearch] = useState('')
+  const timerRef = useRef<NodeJS.Timeout>()
+
+  const textInputHandle = (value: string) => {
+    setTextInput(value)
+    clearTimeout(timerRef.current)
+
+    timerRef.current = setTimeout(() => {
+      setSearch(value)
+    }, 400);
   }
 
-  function savetoClipBoardCallback(value: string) {
-    saveToClipBoard(value)
-    alert(`Copied! => ${value}`)
+  const showRows = rows.filter(item => item.cells[0].label.includes(search))
+
+
+
+
+
+  const [modalType, setModalType] = useState<ModalsType>(null)
+  const openModalHadnler = (value: Exclude<ModalsType, null>) => setModalType(value)
+  const closeModalHandler = () => {
+    setDeleteID(null)
+    setModalType(null)
   }
 
 
+  const toastID = useId('toaster')
+  const { dispatchToast } = useToastController(toastID)
+  const error = useAppSelector(s => s.passManager.error)
 
-  const [search, setSearch] = useTextInput('')
-
-  function openAddModal() {
-    dispatch(modalActions.openModal({ windowType: 'addModal' }))
+  const notifyToast = (status: 'success' | 'error') => {
+    dispatchToast(
+      <Toast>
+        <ToastTitle>{status === 'success' ? 'All fine!' : 'Something was wrong, try again!'}</ToastTitle>
+      </Toast>,
+      { intent: status }
+    )
   }
 
-  let showItems;
-
-  if (search.length > 0) {
-    showItems = items.filter(item => item.login.includes(search))
-  } else {
-    showItems = items
-  }
-
-  const tableRows = showItems.map(item => {
-    return <TableRow
-      key={item.id}
-      leftColumn={<>{item.login} <CustomBtn colour='third' text='Detete' callback={() => deleteCallback(item.id)} /></>}
-      rightColumn={<>{item.password} <CustomBtn colour='first' text='Copy' callback={() => savetoClipBoardCallback(item.password)} /></>}
-    />
-  })
+  useEffect(() => {
+    if (isLoading === 'done') {
+      notifyToast(error ? 'error' : 'success')
+    }
+  }, [isLoading])
 
   return (
-    <div className={classes.mainContainer}>
+    <div className={styles.root}>
 
-      <div className={classes.controlPanel}>
-        <CustomInput
-          labelText='Search login...'
-          placeholderText='type here login'
-          isValid={true}
-          value={search}
-          callback={setSearch}
+      <div className={styles.controlPanel}>
+        <InlineInput
+          value={textInput}
+          onChange={textInputHandle}
+          label='Find login:'
         />
 
-        <CustomBtn
-          colour='second'
-          text='Add new login/pass'
-          callback={openAddModal}
+        <Button
+          onClick={() => openModalHadnler('Add')}
+          icon={<AddRegular />}
+          iconPosition='after'
+          appearance='primary'
+        >
+          ADD NEW
+        </Button>
+
+      </div>
+      <div className={styles.tableContainer}>
+        <SimpleTable
+          columns={columns}
+          rows={showRows}
+          buttons={buttons}
         />
       </div>
 
-      <TwoColumnTable
-        titleText='Pass-Manager'
-        firstColumnText='Login:'
-        secondColumnText='Password:'
-        content={tableRows}
-      />
+
+      {modalType === 'Add' ?
+        < AddNewModal isOpen={true} onCloseModal={closeModalHandler} />
+        : modalType === 'Delete' ?
+          <DeleteModal isOpen={true} onCloseModal={closeModalHandler} deleteID={deleteID!} />
+          : null
+      }
 
 
-      {modalStatus !== null && <ModalWindowWithContent windowType={modalStatus} />}
-      {modalStatus === null && isLoading && <Spinner />}
-      {modalStatus === null && isError && isError.length > 0 &&
-        <div className={classes.errorMsg}>Error : {isError}</div>}
+
+      {isLoading === 'inProgress' &&
+        <div className={styles.spinnerContainer}>
+          <Spinner size='huge' />
+        </div>
+      }
+
+      <Toaster toasterId={toastID} />
     </div>
   );
 }
 
 export default App;
-
-
-

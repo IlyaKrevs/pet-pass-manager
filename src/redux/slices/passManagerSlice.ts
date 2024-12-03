@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, SerializedError } from "@reduxjs/toolkit";
 import { saveToLocalStorage, getFromLocalStorage } from "../../MyFn/localStoragefn";
 
 export interface ILoginItem {
@@ -9,19 +9,19 @@ export interface ILoginItem {
 
 interface IPassManagerState {
     loginItems: ILoginItem[],
-    isLoading: boolean,
-    error: null | string
+    isLoading: 'idle' | 'inProgress' | 'done',
+    error: null | SerializedError
 }
 
 const example: ILoginItem[] = [
     { id: 1, login: 'nastya', password: '123' },
-    { id: 2, login: 'sasha', password: '345' },
-    { id: 3, login: 'masha', password: '678' },
+    { id: 2, login: 'sasha', password: '456' },
+    { id: 3, login: 'masha', password: '789' },
 ]
 
 const initialState: IPassManagerState = {
     loginItems: getFromLocalStorage('loginItems') || example,
-    isLoading: false,
+    isLoading: 'idle',
     error: null,
 }
 
@@ -50,10 +50,10 @@ const deleteLoginPassAsync = createAsyncThunk(
                 res(Math.random() > 0.5)
             }, 1000);
         })
+
         if (!response) {
             throw new Error('Mistake! Try again!')
         }
-
         return data
     }
 )
@@ -67,11 +67,11 @@ const passManagerSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(addLoginPasswordAsync.pending, (state) => {
-                state.isLoading = true
+                state.isLoading = 'inProgress'
                 state.error = null
             })
             .addCase(addLoginPasswordAsync.fulfilled, (state, action) => {
-                state.isLoading = false
+                state.isLoading = 'done'
 
                 const newItem: ILoginItem = {
                     id: Date.now(),
@@ -82,16 +82,16 @@ const passManagerSlice = createSlice({
                 saveToLocalStorage('loginItems', state.loginItems)
             })
             .addCase(addLoginPasswordAsync.rejected, (state, action) => {
-                state.isLoading = false
+                state.isLoading = 'done'
 
-                state.error = action.error.message || 'never'
+                state.error = action.error
             })
             .addCase(deleteLoginPassAsync.pending, (state) => {
-                state.isLoading = true
+                state.isLoading = 'inProgress'
                 state.error = null
             })
             .addCase(deleteLoginPassAsync.fulfilled, (state, action) => {
-                state.isLoading = false
+                state.isLoading = 'done'
 
                 const newState = state.loginItems.filter(item => item.id !== action.payload.id)
                 state.loginItems = newState
@@ -103,14 +103,15 @@ const passManagerSlice = createSlice({
                 }
             })
             .addCase(deleteLoginPassAsync.rejected, (state, action) => {
-                state.isLoading = false
-                state.error = action.error.message || 'never'
+                state.isLoading = 'done'
+                state.error = action.error
             })
 
     }
 })
 
-const passManagerActions = { addLoginPasswordAsync, deleteLoginPassAsync }
+const passManagerActionsAsync = { addLoginPasswordAsync, deleteLoginPassAsync }
 
-export { passManagerActions }
+export { passManagerActionsAsync }
 export default passManagerSlice.reducer
+
