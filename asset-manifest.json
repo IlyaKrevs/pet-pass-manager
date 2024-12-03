@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/pet-pass-manager/static/css/main.b568876a.css",
-    "main.js": "/pet-pass-manager/static/js/main.54d829c5.js",
+    "main.css": "/pet-pass-manager/static/css/main.9dc7d7ba.css",
+    "main.js": "/pet-pass-manager/static/js/main.c31ce6c9.js",
     "index.html": "/pet-pass-manager/index.html",
-    "main.b568876a.css.map": "/pet-pass-manager/static/css/main.b568876a.css.map",
-    "main.54d829c5.js.map": "/pet-pass-manager/static/js/main.54d829c5.js.map"
+    "main.9dc7d7ba.css.map": "/pet-pass-manager/static/css/main.9dc7d7ba.css.map",
+    "main.c31ce6c9.js.map": "/pet-pass-manager/static/js/main.c31ce6c9.js.map"
   },
   "entrypoints": [
-    "static/css/main.b568876a.css",
-    "static/js/main.54d829c5.js"
+    "static/css/main.9dc7d7ba.css",
+    "static/js/main.c31ce6c9.js"
   ]
 }
